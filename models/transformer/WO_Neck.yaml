@@ -1,0 +1,61 @@
+# ARC-Net Ablation: No CAA & No RFD (Standard PANet Head)
+nc: 2
+depth_multiple: 1.33
+width_multiple: 0.25 
+
+anchors:
+  - [10,13, 16,30, 33,23]
+  - [30,61, 62,45, 59,119]
+  - [116,90, 156,198, 373,326]
+
+backbone:
+  # --- LUỒNG 1: VISIBLE (GIỮ NGUYÊN) ---
+  [[-1, 1, Focus, [64, 3]],          # 0 
+   [-1, 1, Conv, [128, 3, 2]],       # 1 
+   [-1, 1, C2f, [128, True]],        # 2
+   [-1, 1, Conv, [256, 3, 2]],       # 3 
+   [-1, 1, C2f, [256, True]],        # 4-P3_Vis
+   [-1, 1, Conv, [512, 3, 2]],       # 5 
+   [-1, 1, C2f, [512, True]],        # 6-P4_Vis
+   [-1, 1, Conv, [512, 3, 2]],       # 7 
+   [-1, 1, GLCIPool, [512, [5, 9, 13]]], # 8-P5_Vis 
+
+  # --- LUỒNG 2: INFRARED (GIỮ NGUYÊN) ---
+   [-4, 1, Focus, [64, 3]],          # 9
+   [-1, 1, Conv, [128, 3, 2]],       # 10
+   [-1, 1, C2f, [128, True]],        # 11
+   [-1, 1, Conv, [256, 3, 2]],       # 12
+   [-1, 1, C2f, [256, True]],        # 13-P3_IR
+   [-1, 1, Conv, [512, 3, 2]],       # 14
+   [-1, 1, C2f, [512, True]],        # 15-P4_IR
+   [-1, 1, Conv, [512, 3, 2]],       # 16 
+   [-1, 1, GLCIPool, [512, [5, 9, 13]]], # 17-P5_IR 
+
+  # --- SPECTRAL FUSION ZONE (GIỮ NGUYÊN) ---
+   [[4, 13], 1, MCPSFusion, [128]],  # 18: Fusion P3
+   [[6, 15], 1, MCPSFusion, [256]],  # 19: Fusion P4
+   [[8, 17], 1, MCPSFusion, [256]],  # 20: Fusion P5 
+  ]
+
+head:
+  # --- STANDARD PANET HEAD (REPLACED CAA & RFD) ---
+  [[-1, 1, Conv, [256, 1, 1]],       # 21 (Thay CAA bằng Conv 1x1 để giảm channel)
+   [-1, 1, nn.Upsample, [None, 2, 'nearest']],
+   [[-1, 19], 1, Concat, [1]],
+   [-1, 1, C2f, [128, False]],       # 24
+
+   [-1, 1, Conv, [128, 1, 1]],       # 25 (Thay RFD bằng Conv 1x1)
+   [-1, 1, nn.Upsample, [None, 2, 'nearest']],
+   [[-1, 18], 1, Concat, [1]],
+   [-1, 1, C2f, [128, False]],       # 28
+
+   [-1, 1, Conv, [128, 3, 2]],       # 29
+   [[-1, 24], 1, Concat, [1]],
+   [-1, 1, C2f, [256, False]],       # 31
+
+   [-1, 1, Conv, [256, 3, 2]],       # 32
+   [[-1, 21], 1, Concat, [1]],
+   [-1, 1, C2f, [256, False]],       # 34
+
+   [[28, 31, 34], 1, Detect, [nc, anchors]], # 35
+  ]

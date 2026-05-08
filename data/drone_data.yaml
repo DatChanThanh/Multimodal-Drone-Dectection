@@ -1,0 +1,9 @@
+
+path: C:/Users/Tai/Desktop/DAT_K22/dataset/drone/split_data_drone
+train_rgb: C:/Users/Tai/Desktop/DAT_K22/dataset/drone/split_data_drone/train/images_rgb
+train_ir: C:/Users/Tai/Desktop/DAT_K22/dataset/drone/split_data_drone/train/images_ir
+val_rgb: C:/Users/Tai/Desktop/DAT_K22/dataset/drone/split_data_drone/test/images_rgb
+val_ir: C:/Users/Tai/Desktop/DAT_K22/dataset/drone/split_data_drone/test/images_ir
+
+nc: 2
+names: ['bird', 'drone']
